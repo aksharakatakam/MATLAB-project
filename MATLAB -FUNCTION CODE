@@ -1,0 +1,55 @@
+function [Solar_output, Wind_output, Battery_output, Grid_output, Battery_state] = IEMS(load, solar, wind, batt)
+    % Battery maximum capacity
+    batt_capacity = 10;   % kWh
+
+    % Initialize outputs
+    Solar_output = 0; 
+    Wind_output = 0; 
+    Battery_output = 0; 
+    Grid_output = 0;
+
+    demand = load;
+
+    % 1. Solar first
+    if solar >= demand
+        Solar_output = demand;
+        batt = min(batt + (solar - demand), batt_capacity);
+        demand = 0;
+    else
+        Solar_output = solar;
+        demand = demand - solar;
+    end
+
+    % 2. Wind next
+    if demand > 0
+        if wind >= demand
+            Wind_output = demand;
+            demand = 0;
+        else
+            Wind_output = wind;
+            demand = demand - wind;
+        end
+    end
+
+    % 3. Battery next
+    if demand > 0
+        if batt >= demand
+            Battery_output = demand;
+            batt = batt - demand;
+            demand = 0;
+        else
+            Battery_output = batt;
+            demand = demand - batt;
+            batt = 0;
+        end
+    end
+
+    % 4. Grid last
+    if demand > 0
+        Grid_output = demand;
+        demand = 0;
+    end
+
+    % Output updated battery state
+    Battery_state = batt;
+end
